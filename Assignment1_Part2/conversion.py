@@ -5,7 +5,7 @@ import binascii
 
 
 def final_result (number, num_bits, f_write, bin_string):
-    if num_bits == 1
+    if num_bits == 1:
         final_string = "0"
         for i in range (1, 8):
             final_string += bin_string[i]
@@ -45,8 +45,13 @@ def final_result (number, num_bits, f_write, bin_string):
             final_string += bin_string[i]
 
     n = int (final_string, 2)
-    print binascii.unhexlify('%x' % n)
-    f_write.write(binascii.unhexlify('%x' % n))
+    print final_string, n, num_bits
+    if (n != 12):
+        print binascii.unhexlify('%x' % n)
+        f_write.write(binascii.unhexlify('%x' % n))
+    else:
+        f_write.write('')
+
 
 
 def construct_binary (number, num_bits, f_write):
@@ -54,7 +59,9 @@ def construct_binary (number, num_bits, f_write):
     number_str = ""
     number_str += str(number)
     bin_string = bin(int(number_str, 10))[2:].zfill(num_bits*8)
+    final_result (number, num_bits, f_write, bin_string)
     #print number, bin_string
+
 
 def compare_and_convert (number, f_write):
     if number > 0 and number <= 127:
@@ -92,6 +99,7 @@ def read_a_file(file_name):
             final_num = (pre_bit2 * 100 + pre_bit1)
             compare_and_convert (final_num, f_write)
     finally:
+        f_write.write('\n')
         f_write.write('\n')
         fd.close()
         f_write.close()
