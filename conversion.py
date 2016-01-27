@@ -4,21 +4,57 @@ import sys
 import binascii
 
 
+def final_result (number, num_bits, f_write, bin_string):
+    if num_bits == 1
+        final_string = "0"
+        for i in range (1, 8):
+            final_string += bin_string[i]
+        #print final_string
+
+    elif num_bits == 2:
+        final_string = "110"
+        for i in range (5, 10):
+            final_string += bin_string[i]
+        final_string += "10"
+        for i in range (10, 16):
+            final_string += bin_string[i]
+
+    elif num_bits == 3:
+        final_string = "1110"
+        for i in range (8, 12):
+            final_string += bin_string[i]
+        final_string += "10"
+        for i in range (12, 18):
+            final_string += bin_string[i]
+        final_string += "10"
+        for i in range (18, 24):
+            final_string += bin_string[i]
+
+    elif num_bits == 4:
+        final_string = "11110"
+        for i in range (11, 14):
+            final_string += bin_string[i]
+        final_string += "10"
+        for i in range (14, 20):
+            final_string += bin_string[i]
+        final_string += "10"
+        for i in range (20, 26):
+            final_string += bin_string[i]
+        final_string += "10"
+        for i in range (26, 32):
+            final_string += bin_string[i]
+
+    n = int (final_string, 2)
+    print binascii.unhexlify('%x' % n)
+    f_write.write(binascii.unhexlify('%x' % n))
+
+
 def construct_binary (number, num_bits, f_write):
     #print number
     number_str = ""
     number_str += str(number)
     bin_string = bin(int(number_str, 10))[2:].zfill(num_bits*8)
     #print number, bin_string
-    final_string = ""
-    final_string = "0"
-    for i in range (1, 8):
-        final_string += bin_string[i]
-    #print final_string
-    n = int (final_string, 2)
-    print binascii.unhexlify('%x' % n)
-    f_write.write(binascii.unhexlify('%x' % n))
-
 
 def compare_and_convert (number, f_write):
     if number > 0 and number <= 127:
