@@ -82,17 +82,12 @@ def read_a_file(file_name):
     buffer = ""
     try:
         bytes_read = fd.read(1)
-        bytes_read = fd.read(1)
         while bytes_read != "":
             pre_bit1 = 0
             pre_bit2 = 0
             final_num = ""
 
-            bytes_read = fd.read(1)
-            if bytes_read != "":
-                pre_bit1 = ord(bytes_read)
-            else:
-                break
+            pre_bit1 = ord(bytes_read)
 
             bytes_read = fd.read(1)
             if bytes_read != "":
@@ -105,6 +100,7 @@ def read_a_file(file_name):
             final_num += hex(pre_bit2)[2:]
             print "Pre1 : ", pre_bit1, "Pre2 : ", pre_bit2, "Final :", final_num
             compare_and_convert (final_num, f_write)
+            bytes_read = fd.read(1)
     finally:
         f_write.write('\n')
         f_write.write('\n')
