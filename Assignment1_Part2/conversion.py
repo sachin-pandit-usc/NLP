@@ -64,6 +64,8 @@ def construct_binary (number, num_bits, f_write):
 
 
 def compare_and_convert (number, f_write):
+    number = int(number, 16)
+    #print number
     if number > 0 and number <= 127:
         construct_binary (number, 1, f_write)
     elif number > 127 and number <= 2047:
@@ -96,7 +98,11 @@ def read_a_file(file_name):
             else:
                 break
 
-            final_num = (pre_bit2 * 100 + pre_bit1)
+            final_num = ""
+            if pre_bit2 != 0:
+                final_num += hex(pre_bit2)[2:]
+            final_num += hex(pre_bit1)[2:]
+            print "Pre 1 : ", pre_bit1, "Pre 2", pre_bit2, "Final :", final_num
             compare_and_convert (final_num, f_write)
     finally:
         f_write.write('\n')
