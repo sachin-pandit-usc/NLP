@@ -46,11 +46,11 @@ def final_result (number, num_bits, f_write, bin_string):
 
     n = int (final_string, 2)
     print final_string, n, num_bits
-    if (n != 12):
+    if (n != 12 and n != 10):
         print binascii.unhexlify('%x' % n)
         f_write.write(binascii.unhexlify('%x' % n))
     else:
-        f_write.write('')
+        f_write.write(' ')
 
 
 
@@ -65,7 +65,7 @@ def construct_binary (number, num_bits, f_write):
 
 def compare_and_convert (number, f_write):
     number = int(number, 16)
-    #print number
+    print number
     if number > 0 and number <= 127:
         construct_binary (number, 1, f_write)
     elif number > 127 and number <= 2047:
@@ -82,9 +82,11 @@ def read_a_file(file_name):
     buffer = ""
     try:
         bytes_read = fd.read(1)
+        bytes_read = fd.read(1)
         while bytes_read != "":
             pre_bit1 = 0
             pre_bit2 = 0
+            final_num = ""
 
             bytes_read = fd.read(1)
             if bytes_read != "":
@@ -98,11 +100,10 @@ def read_a_file(file_name):
             else:
                 break
 
-            final_num = ""
-            if pre_bit2 != 0:
-                final_num += hex(pre_bit2)[2:]
-            final_num += hex(pre_bit1)[2:]
-            print "Pre 1 : ", pre_bit1, "Pre 2", pre_bit2, "Final :", final_num
+            if pre_bit1 != 0:
+                final_num += hex(pre_bit1)[2:]
+            final_num += hex(pre_bit2)[2:]
+            print "Pre1 : ", pre_bit1, "Pre2 : ", pre_bit2, "Final :", final_num
             compare_and_convert (final_num, f_write)
     finally:
         f_write.write('\n')
