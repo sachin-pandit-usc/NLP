@@ -44,13 +44,13 @@ def calculate_prob (fwrite, subdir, file, word):
     global prob3
     global prob4
 
-    print ("Word = %s\n" % word)
+    #print ("Word = %s\n" % word)
     if word in word_dict:
         temp = word_dict[word]
         count = 0
         for buf in temp.split():
             if (count == 0):
-                print ("buf = %s, log = %f" % (buf, math.log (float(buf))))
+                #print ("buf = %s, log = %f" % (buf, math.log (float(buf))))
                 prob1 += math.log (float(buf))
             elif (count == 1):
                 prob2 += math.log (float(buf))
@@ -81,7 +81,7 @@ def process_filename (fwrite, subdir, file):
                         word = word.replace (c,"")
                     word = word.lower()
                     calculate_prob (fwrite, subdir, file, word)
-            print ("%f %f %f %f\n" % (prob1, prob2, prob3, prob4))
+            #print ("%f %f %f %f\n" % (prob1, prob2, prob3, prob4))
             write_output (fwrite, subdir, file)
     except FileNotFoundError:
         print ("File not found\n")
@@ -124,6 +124,8 @@ def check_syntax():
         exit()
 
 def main():
+    #print ("\n\n Calculate prior probability !!!!!\n")
+    #exit ()
     check_syntax ()
     read_model_file()
     #print_classification()

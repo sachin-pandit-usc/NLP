@@ -139,21 +139,21 @@ def read_file (filename, case_number):
 def process_filename(subdir, file):
     if (file != ".DS_Store"):
         temp = os.path.join (subdir, file)
-        print ("File = %s" % (temp))
+        #print ("File = %s" % (temp))
         if (("negative" in temp) and ("truthful" in temp)):
-            print ("\n%s is %s and %s" % (file, "negative", "truthful"))
+            #print ("\n%s is %s and %s" % (file, "negative", "truthful"))
             read_file (temp, 1)
             #print_dictionary ()
         if (("negative" in temp) and ("deceptive" in temp)):
-            print ("\n%s is %s and %s" % (file, "negative", "deceptive"))
+            #print ("\n%s is %s and %s" % (file, "negative", "deceptive"))
             read_file (temp, 2)
             #print_dictionary ()
         if (("positive" in temp) and ("truthful" in temp)):
-            print ("\n%s is %s and %s" % (file, "positive", "truthful"))
+            #print ("\n%s is %s and %s" % (file, "positive", "truthful"))
             read_file (temp, 3)
             #print_dictionary ()
         if (("positive" in temp) and ("deceptive" in temp)):
-            print ("\n%s is %s and %s" % (file, "positive", "deceptive"))
+            #print ("\n%s is %s and %s" % (file, "positive", "deceptive"))
             read_file (temp, 4)
             #print_dictionary ()
 
@@ -165,6 +165,7 @@ def main():
     for subdir, dirs, files in os.walk (sys.argv[1]):
         if (len(files) != 0):
             for file in files:
+                #print ("File name = %s\n" % file)
                 process_filename (subdir, file)
 
     class_wordcount()
