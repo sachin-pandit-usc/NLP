@@ -6,8 +6,17 @@ import math
 import string
 
 word_dict = {}
+prob1 = 0.0
+prob2 = 0.0
+prob3 = 0.0
+prob4 = 0.0
 
-def write_output (fwrite, subdir, file, prob1, prob2, prob3, prob4):
+def write_output (fwrite, subdir, file):
+    global prob1
+    global prob2
+    global prob3
+    global prob4
+
     max_value = max (prob1, prob2, prob3, prob4)
 
     if (prob1 == max_value):
@@ -30,10 +39,11 @@ def write_output (fwrite, subdir, file, prob1, prob2, prob3, prob4):
 
 
 def calculate_prob (fwrite, subdir, file, word):
-    prob1 = 0.0
-    prob2 = 0.0
-    prob3 = 0.0
-    prob4 = 0.0
+    global prob1
+    global prob2
+    global prob3
+    global prob4
+
     print ("Word = %s\n" % word)
     if word in word_dict:
         temp = word_dict[word]
@@ -50,12 +60,18 @@ def calculate_prob (fwrite, subdir, file, word):
                 prob4 += math.log (float(buf))
             count += 1
 
-        print ("%f %f %f %f\n" % (prob1, prob2, prob3, prob4))
-        write_output (fwrite, subdir, file, prob1, prob2, prob3, prob4)
 
 def process_filename (fwrite, subdir, file):
     try:
         if (file != ".DS_Store"):
+            global prob1
+            prob1 = 0
+            global prob2
+            prob2 = 0
+            global prob3
+            prob3 = 0
+            global prob4
+            prob4 = 0
             filepath = os.path.join (subdir, file)
             #print ("%s\n" % (file))
             fd1 = open (filepath, "r")
@@ -65,6 +81,8 @@ def process_filename (fwrite, subdir, file):
                         word = word.replace (c,"")
                     word = word.lower()
                     calculate_prob (fwrite, subdir, file, word)
+            print ("%f %f %f %f\n" % (prob1, prob2, prob3, prob4))
+            write_output (fwrite, subdir, file)
     except FileNotFoundError:
         print ("File not found\n")
 
