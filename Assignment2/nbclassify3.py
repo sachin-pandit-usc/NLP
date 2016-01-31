@@ -7,36 +7,40 @@ import string
 
 word_dict = {}
 
-def write_output (subdir, file, prob1, prob2, prob3, prob4):
-    fwrite = open ("nboutput.txt", "w")
+def write_output (fwrite, subdir, file, prob1, prob2, prob3, prob4):
     max_value = max (prob1, prob2, prob3, prob4)
 
     if (prob1 == max_value):
         temp = ""
-        temp += "truthful" + " " + "positive" + os.path.join (subdir, file) + "\n"
+        temp += "truthful" + " " + "positive" + " " + os.path.join (subdir, file) + "\n"
         fwrite.write (temp)
     elif (prob2 == max_value):
         temp = ""
-        temp += "truthful" + " " + "negative" + os.path.join (subdir, file) + "\n"
+        temp += "truthful" + " " + "negative" + " " + os.path.join (subdir, file) + "\n"
         fwrite.write (temp)
     elif (prob3 == max_value):
         temp = ""
-        temp += "deceptive" + " " + "positive" + os.path.join (subdir, file) + "\n"
+        temp += "deceptive" + " " + "positive" + " " + os.path.join (subdir, file) + "\n"
         fwrite.write (temp)
     elif (prob4 == max_value):
         temp = ""
-        temp += "deceptive" + " " + "negative" + os.path.join (subdir, file) + "\n"
+        temp += "deceptive" + " " + "negative" + " " + os.path.join (subdir, file) + "\n"
         fwrite.write (temp)
 
 
 
-def calculate_prob (word, prob1, prob2, prob3, prob4):
+def calculate_prob (fwrite, subdir, file, word):
+    prob1 = 0.0
+    prob2 = 0.0
+    prob3 = 0.0
+    prob4 = 0.0
     print ("Word = %s\n" % word)
     if word in word_dict:
         temp = word_dict[word]
         count = 0
         for buf in temp.split():
             if (count == 0):
+                print ("buf = %s, log = %f" % (buf, math.log (float(buf))))
                 prob1 += math.log (float(buf))
             elif (count == 1):
                 prob2 += math.log (float(buf))
@@ -46,13 +50,11 @@ def calculate_prob (word, prob1, prob2, prob3, prob4):
                 prob4 += math.log (float(buf))
             count += 1
 
+        print ("%f %f %f %f\n" % (prob1, prob2, prob3, prob4))
+        write_output (fwrite, subdir, file, prob1, prob2, prob3, prob4)
 
-def process_filename (subdir, file):
+def process_filename (fwrite, subdir, file):
     try:
-        prob1 = 0
-        prob2 = 0
-        prob3 = 0
-        prob4 = 0
         if (file != ".DS_Store"):
             filepath = os.path.join (subdir, file)
             #print ("%s\n" % (file))
@@ -62,17 +64,16 @@ def process_filename (subdir, file):
                     for c in string.punctuation:
                         word = word.replace (c,"")
                     word = word.lower()
-                    calculate_prob (word, prob1, prob2, prob3, prob4)
-
-            write_output (subdir, file, prob1, prob2, prob3, prob4)
+                    calculate_prob (fwrite, subdir, file, word)
     except FileNotFoundError:
         print ("File not found\n")
 
 def traverse_file():
+    fwrite = open ("nboutput.txt", "w")
     for subdir, dirs, files in os.walk (sys.argv[1]):
         if (len(files) != 0):
             for file in files:
-                process_filename (subdir, file)
+                process_filename (fwrite, subdir, file)
 
 
 def print_classification():
