@@ -4,6 +4,7 @@ import sys
 import os
 import math
 import string
+import re
 
 word_dict = {}
 prob1 = 0.0
@@ -76,9 +77,12 @@ def process_filename (fwrite, subdir, file):
             #print ("%s\n" % (file))
             fd1 = open (filepath, "r")
             for line in fd1:
-                for word in line.split():
+                words = re.sub('[^A-Za-z]',' ',line).split()
+                for word in words:
+                    '''
                     for c in string.punctuation:
                         word = word.replace (c,"")
+                    '''
                     word = word.lower()
                     calculate_prob (fwrite, subdir, file, word)
             #print ("%f %f %f %f\n" % (prob1, prob2, prob3, prob4))

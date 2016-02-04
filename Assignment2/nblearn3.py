@@ -4,6 +4,7 @@ import sys
 import os
 import string
 import collections
+import re
 
 truth_pos = {}
 truth_neg = {}
@@ -53,7 +54,7 @@ def get_unique_count():
 
     total_keys = collections.Counter (truth_pos) + collections.Counter (truth_neg) + collections.Counter (decep_pos) + collections.Counter (decep_neg)
     total_unique_count = len (total_keys.keys())
-    print ("Total unique word count = %d" % (total_unique_count))
+    #print ("Total unique word count = %d" % (total_unique_count))
 
 
 def class_wordcount ():
@@ -66,7 +67,7 @@ def class_wordcount ():
     truth_neg_wordcount = sum (truth_neg.values())
     decep_pos_wordcount = sum (decep_pos.values())
     decep_neg_wordcount = sum (decep_neg.values())
-    print ("LISTENNNNN LISTENNNNN LISTENNNNNL:\nTruthful positive = %d\nTruthful negative = %d\nDeceptive positive = %d\nDeceptive Negative = %d\n" % (truth_pos_wordcount, truth_neg_wordcount, decep_pos_wordcount, decep_neg_wordcount))
+    #print ("LISTENNNNN LISTENNNNN LISTENNNNNL:\nTruthful positive = %d\nTruthful negative = %d\nDeceptive positive = %d\nDeceptive Negative = %d\n" % (truth_pos_wordcount, truth_neg_wordcount, decep_pos_wordcount, decep_neg_wordcount))
 
 
 
@@ -124,9 +125,12 @@ def read_file (filename, case_number):
         temp = ""
         fd = open (filename, "r")
         for line in fd:
-            for word in line.split():
+            words = re.sub('[^A-Za-z]',' ',line).split()
+            for word in words:
+                '''
                 for c in string.punctuation:
                     word = word.replace(c,"")
+                '''
                 word = word.lower()
                 generate_dictionary (word, case_number)
                 #print ("Word = %s" % word)
