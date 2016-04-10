@@ -1,7 +1,6 @@
 #!/usr/bin/python3.4 -tt
 
 import sys
-import collections
 
 word_dict = {}
 tag_dict = {}
