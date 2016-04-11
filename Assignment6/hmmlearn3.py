@@ -31,9 +31,8 @@ def write_frequency ():
     try:
         fd = open ("hmmmodel.txt", "w")
 
-        for word in word_dict:
-            t = "1" + " " + word + " " + str(word_dict[word]) + "\n"
-            fd.write (t)
+        t = "5" + " " + str(line_count) + "\n"
+        fd.write(t)
 
         for tag in tag_dict:
             t = "2" + " " + tag + " " + str(tag_dict[tag]) + "\n"
@@ -43,14 +42,16 @@ def write_frequency ():
             t = "3" + " " + tag + " " + str(end_tag_dict[tag]) + "\n"
             fd.write (t)
 
+        for word in word_dict:
+            t = "1" + " " + word + " " + str(word_dict[word]) + "\n"
+            fd.write (t)
+
         for trans in trans_dict:
             temp = trans.split("!@#$%")
             t = "4" + " " + temp[0] + " " + temp[1] + " "
             t += str(trans_dict[trans]) + "\n"
             fd.write (t)
 
-        t = "5" + " " + str(line_count) + "\n"
-        fd.write(t)
     except FileNotFoundError:
         print ("Can't open the file for writing")
 

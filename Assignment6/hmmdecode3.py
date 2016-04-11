@@ -4,22 +4,21 @@
 import sys
 from collections import defaultdict
 
-word_dict = {}
 tag_dict = {}
 end_tag_dict = {}
-trans_dict = {}
 line_count = 0
 
-tag_trans_dict = defaultdict (dict)
+
+emission_dict = {}
+trans_dict = defaultdict (dict)
 probability = defaultdict (dict)
 backpointer = defaultdict (dict)
 
 
 def print_dictionary():
-
     print ("WORD/TAG >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    for key in word_dict:
-        print ("%s %d" % (key, word_dict[key]))
+    for key in emission_dict:
+        print ("%s %d" % (key, emission_dict[key]))
 
     print ("TAG >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     for key in tag_dict:
@@ -29,15 +28,10 @@ def print_dictionary():
     for key in end_tag_dict:
         print ("%s %d" % (key, end_tag_dict[key]))
 
-    #print ("Transition >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    #for key in trans_dict:
-    #    print ("%s %d" % (key, trans_dict[key]))
-
-    print ("Tag trans dict>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    print (tag_trans_dict)
-    for key1 in tag_trans_dict:
-        for key2 in tag_trans_dict[key1]:
-            print ("Key1 = %s : Key2 = %s : value = %s" % (key1, key2, tag_trans_dict[key1][key2]))
+    print ("Transition >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    for key1 in trans_dict:
+        for key2 in trans_dict[key1]:
+            print ("%s %s %d" % (key1, key2, trans_dict[key1][key2]))
 
 
 def fill_dictionary (cur_dict, words):
@@ -47,16 +41,17 @@ def fill_dictionary (cur_dict, words):
 
 
 def read_model_file (fd):
-    global word_dict
+    global emission_dict
     global tag_dict
     global end_tag_dict
     global line_count
+    global trans_dict
 
     for line in fd:
         words = line.split()
         flag = words[0].strip()
         if "1" == flag:
-            fill_dictionary (word_dict, words)
+            fill_dictionary (emission_dict, words)
         elif "2" == flag:
             fill_dictionary (tag_dict, words)
         elif "3" == flag:
@@ -64,10 +59,9 @@ def read_model_file (fd):
         elif "4" == flag:
             key1 = words[1].strip()
             key2 = words[2].strip()
-            value = words[3].strip()
-            tag_trans_dict[key1][key2] = int(value)
-            #key = key1 + "!@#$%" + key2
-            #trans_dict[key] = int(value)
+            value = int(words[3].strip())
+            if key1 in tag_dict:
+                trans_dict[key1][key2] = value/tag_dict[key1]
         elif "5" == flag:
             line_count = int(words[1].strip())
 
@@ -75,15 +69,13 @@ def read_model_file (fd):
 def transition_prob (flag, tag1, tag2):
     res = 0.0
 
-    #uni_tag = tag1 + "!@#$%" + tag2
-
-    if tag1 in tag_trans_dict:
-        if tag2 in tag_trans_dict[tag1]:
-            num = tag_trans_dict[tag1][tag2]
+    if tag1 in trans_dict:
+        if tag2 in trans_dict[tag1]:
+            num = trans_dict[tag1][tag2]
         else:
-            return (0.000001)/line_count
+            return (0.00001)/line_count
     else:
-        return (0.000001)/line_count
+        return (0.00001)/line_count
 
     if flag == 0:
         den = line_count
@@ -104,8 +96,8 @@ def emission_prob (tag, word):
     res = 0.0
     temp = word + "/" + tag
 
-    if temp in word_dict:
-        num = word_dict [temp]
+    if temp in emission_dict:
+        num = emission_dict [temp]
     else:
         return (0.00001)/line_count
 
@@ -131,12 +123,12 @@ def assign_tag (fdw, words):
         backpointer[tag, 0] = "start_state_q0"
 
     for t in range (1, len(words)):
-        for tag in tag_trans_dict:
+        for tag in tag_dict:
             max_prob = -999999
             max_tag = ""
-            for inner_tag in tag_trans_dict[tag]:
+            for inner_tag in tag_dict:
                 temp = probability [inner_tag, t-1] * transition_prob (1, inner_tag, tag) * emission_prob (tag, words[t].strip())
-                if temp > max_prob or max_prob == -999999:
+                if temp > max_prob:
                     max_prob = temp
                     max_tag = inner_tag
             probability[tag, t] = max_prob
@@ -147,7 +139,7 @@ def assign_tag (fdw, words):
     max_tag = ""
     for tag in tag_dict:
         temp = probability [tag, len(words)-1]
-        if temp > max_prob or max_prob == -999999:
+        if temp > max_prob:
             max_prob = temp
             max_tag = tag
 
