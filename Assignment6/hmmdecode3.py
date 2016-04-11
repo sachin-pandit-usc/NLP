@@ -110,15 +110,15 @@ def assign_tag (fdw, words):
     global backpointer
 
     word = words[0].strip()
-    for tag in tag_dict:
+    for tag in end_tag_dict:
         probability[tag, 0] = transition_prob ("start_state_q0", tag) * emission_prob (tag, word)
         backpointer[tag, 0] = "start_state_q0"
 
     for t in range (1, len(words)):
-        for tag in tag_dict:
+        for tag in end_tag_dict:
             max_prob = -999999
             max_tag = ""
-            for inner_tag in tag_dict:
+            for inner_tag in end_tag_dict:
                 temp = probability [inner_tag, t-1] * transition_prob (inner_tag, tag) * emission_prob (tag, words[t].strip())
                 if temp > max_prob:
                     max_prob = temp
@@ -129,7 +129,7 @@ def assign_tag (fdw, words):
 
     max_prob = -999999
     max_tag = ""
-    for tag in tag_dict:
+    for tag in end_tag_dict:
         temp = probability [tag, len(words)-1]
         if temp > max_prob:
             max_prob = temp
