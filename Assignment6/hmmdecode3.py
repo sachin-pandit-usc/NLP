@@ -10,6 +10,7 @@ end_tag_dict = {}
 trans_dict = {}
 line_count = 0
 
+tag_trans_dict = defaultdict (dict)
 probability = defaultdict (dict)
 backpointer = defaultdict (dict)
 
@@ -28,9 +29,15 @@ def print_dictionary():
     for key in end_tag_dict:
         print ("%s %d" % (key, end_tag_dict[key]))
 
-    print ("Transition >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    for key in trans_dict:
-        print ("%s %d" % (key, trans_dict[key]))
+    #print ("Transition >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    #for key in trans_dict:
+    #    print ("%s %d" % (key, trans_dict[key]))
+
+    print ("Tag trans dict>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print (tag_trans_dict)
+    for key1 in tag_trans_dict:
+        for key2 in tag_trans_dict[key1]:
+            print ("Key1 = %s : Key2 = %s : value = %s" % (key1, key2, tag_trans_dict[key1][key2]))
 
 
 def fill_dictionary (cur_dict, words):
@@ -58,8 +65,9 @@ def read_model_file (fd):
             key1 = words[1].strip()
             key2 = words[2].strip()
             value = words[3].strip()
-            key = key1 + "!@#$%" + key2
-            trans_dict[key] = int(value)
+            tag_trans_dict[key1][key2] = int(value)
+            #key = key1 + "!@#$%" + key2
+            #trans_dict[key] = int(value)
         elif "5" == flag:
             line_count = int(words[1].strip())
 
@@ -67,10 +75,13 @@ def read_model_file (fd):
 def transition_prob (flag, tag1, tag2):
     res = 0.0
 
-    uni_tag = tag1 + "!@#$%" + tag2
+    #uni_tag = tag1 + "!@#$%" + tag2
 
-    if uni_tag in trans_dict:
-        num = trans_dict[uni_tag]
+    if tag1 in tag_trans_dict:
+        if tag2 in tag_trans_dict[tag1]:
+            num = tag_trans_dict[tag1][tag2]
+        else:
+            return (0.000001)/line_count
     else:
         return (0.000001)/line_count
 
@@ -110,7 +121,7 @@ def emission_prob (tag, word):
     return res
 
 
-def assign_tag (words):
+def assign_tag (fdw, words):
     global probability
     global backpointer
 
@@ -120,12 +131,12 @@ def assign_tag (words):
         backpointer[tag, 0] = "start_state_q0"
 
     for t in range (1, len(words)):
-        for tag in tag_dict:
+        for tag in tag_trans_dict:
             max_prob = -999999
             max_tag = ""
-            for inner_tag in tag_dict:
+            for inner_tag in tag_trans_dict[tag]:
                 temp = probability [inner_tag, t-1] * transition_prob (1, inner_tag, tag) * emission_prob (tag, words[t].strip())
-                if temp > max_prob:
+                if temp > max_prob or max_prob == -999999:
                     max_prob = temp
                     max_tag = inner_tag
             probability[tag, t] = max_prob
@@ -135,29 +146,30 @@ def assign_tag (words):
     max_prob = -999999
     max_tag = ""
     for tag in tag_dict:
-        temp = probability (tag, len(words)-1)
-        print (temp)
-        if temp > max_prob:
+        temp = probability [tag, len(words)-1]
+        if temp > max_prob or max_prob == -999999:
             max_prob = temp
             max_tag = tag
 
     tagged_sentence = words[len(words)-1].strip() + "/" + max_tag
-    for t in range (T-2, -1):
-        temp = backpointer[max_tag, t]
-        tagges_sentence = words[t].strip() + "/" + temp
+    for t in reversed(range (len(words)-1)):
+        temp = backpointer[max_tag, t+1]
+        tagged_sentence = words[t].strip() + "/" + temp + " " + tagged_sentence
         max_tag = temp
 
-    print ("Tagged sentence = %s" % (tagged_sentence))
+    fdw.write(tagged_sentence + "\n")
 
 def read_raw_file (fd):
     global probability
     global backpointer
 
+    fdw = open ("hmmoutput.txt", "w")
+    fdw = open ("hmmoutput.txt", "a")
     for line in fd:
         probability = defaultdict (dict)
         backpointer = defaultdict (dict)
         words = line.split()
-        assign_tag (words)
+        assign_tag (fdw, words)
 
 
 def process_model_file (filename):
