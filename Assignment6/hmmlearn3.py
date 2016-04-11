@@ -6,7 +6,7 @@ word_dict = {}
 tag_dict = {}
 end_tag_dict = {}
 trans_dict = {}
-
+line_count = 0
 
 def print_frequency ():
     print ("Words >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -48,12 +48,16 @@ def write_frequency ():
             t = "4" + " " + temp[0] + " " + temp[1] + " "
             t += str(trans_dict[trans]) + "\n"
             fd.write (t)
+
+        t = "5" + " " + str(line_count) + "\n"
+        fd.write(t)
     except FileNotFoundError:
         print ("Can't open the file for writing")
 
 
-def calculate_frequency (cur_tag_dict, word):
+def calculate_frequency (flag, cur_tag_dict, word):
     global word_dict
+    global end_tag_dict
 
     tag = word[-2:]
 
@@ -66,11 +70,21 @@ def calculate_frequency (cur_tag_dict, word):
         cur_tag_dict[tag] += 1
     else:
         cur_tag_dict[tag] = 1
+
+    if flag == 2:
+        if tag in end_tag_dict:
+            end_tag_dict[tag] += 1
+        else:
+            end_tag_dict[tag] = 1
     #print ("%s, %s, %s" % (word, actual_word, tag))
 
 
-def calculate_transition_prob (first_tag, second_tag):
-    tag1 = first_tag[-2:]
+def calculate_transition_prob (flag, first_tag, second_tag):
+
+    if flag != 0:
+        tag1 = first_tag[-2:]
+    else:
+        tag1 = first_tag
     tag2 = second_tag[-2:]
     temp = tag1 + "!@#$%" + tag2
 
@@ -82,14 +96,17 @@ def calculate_transition_prob (first_tag, second_tag):
 
 def read_file (fd):
     global tag_dict
-    global end_tag_dict
+    global line_count
 
     for line in fd:
         words = line.split()
+        if len(words) >= 1:
+            calculate_transition_prob (0, "start_state_q0", words[0].strip())
         for i in range(0, len(words)-1):
-            calculate_transition_prob (words[i].strip(), words[i+1].strip())
-            calculate_frequency (tag_dict, words[i].strip())
-        calculate_frequency (end_tag_dict, words[len(words)-1].strip())
+            calculate_transition_prob (1, words[i].strip(), words[i+1].strip())
+            calculate_frequency (1, tag_dict, words[i].strip())
+        calculate_frequency (2, tag_dict, words[len(words)-1].strip())
+        line_count += 1
 
 
 def process_file (filename):
