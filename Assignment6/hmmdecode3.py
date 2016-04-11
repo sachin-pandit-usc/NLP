@@ -94,17 +94,11 @@ def transition_prob (inner_tag, tag):
 
 
 def emission_prob (tag, word):
-    '''
     if word in emission_dict:
         if tag in emission_dict[word]:
             res = emission_dict [word][tag]
         else:
             return (0.00001)/line_count
-    else:
-        return (0.00001)/line_count
-    '''
-    if tag in emission_dict[word]:
-        res = emission_dict [word][tag]
     else:
         return (0.00001)/line_count
 
@@ -124,9 +118,6 @@ def assign_tag (fdw, words):
         for tag in tag_dict:
             max_prob = -999999
             max_tag = ""
-            if words[t].strip() not in emission_dict:
-                max_prob = (0.00001)/line_count
-                max_tag = tag
             for inner_tag in tag_dict:
                 temp = probability [inner_tag, t-1] * transition_prob (inner_tag, tag) * emission_prob (tag, words[t].strip())
                 if temp > max_prob:
