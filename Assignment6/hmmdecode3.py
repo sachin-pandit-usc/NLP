@@ -127,7 +127,7 @@ def assign_tag (fdw, words):
                 probability[tag, 0] = trans_dict["start_state_q0"][tag] + emission_dict [word][tag]
                 #print ("%s %s %d %s" % ("start_state_q0", tag, 0, probability[tag,0]))
             else:
-                probability[tag, 0] = trans_dict["start_state_q0"][tag]
+                probability[tag, 0] = -1000
         else:
             probability[tag, 0] = trans_dict["start_state_q0"][tag]
         backpointer[tag, 0] = "start_state_q0"
