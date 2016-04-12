@@ -124,12 +124,12 @@ def assign_tag (fdw, words):
     for tag in end_tag_dict:
         if word in emission_dict:
             if tag in emission_dict[word]:
-                probability[tag, 0] = transition_prob("start_state_q0",tag) + emission_dict [word][tag]
+                probability[tag, 0] = trans_dict["start_state_q0"][tag] + emission_dict [word][tag]
                 #print ("%s %s %d %s" % ("start_state_q0", tag, 0, probability[tag,0]))
             else:
-                probability[tag, 0] = -1000
+                probability[tag, 0] = trans_dict["start_state_q0"][tag]
         else:
-            probability[tag, 0] = -1000
+            probability[tag, 0] = trans_dict["start_state_q0"][tag]
         backpointer[tag, 0] = "start_state_q0"
 
     #print (probability)
@@ -141,7 +141,7 @@ def assign_tag (fdw, words):
                     max_prob = -999999
                     max_tag = ""
                     for inner_tag in end_tag_dict:
-                        temp = probability[inner_tag, t-1] + transition_prob(inner_tag,tag) + emission_dict[word][tag]
+                        temp = probability[inner_tag, t-1] + trans_dict[inner_tag][tag] + emission_dict[word][tag]
                         #print ("%s %s %d %s" % (inner_tag, tag, t, temp))
                         if temp > max_prob or max_prob == -999999:
                             max_prob = temp
@@ -159,7 +159,7 @@ def assign_tag (fdw, words):
                 max_prob = -999999
                 max_tag = ""
                 for inner_tag in end_tag_dict:
-                    temp = probability[inner_tag, t-1] + transition_prob(inner_tag,tag)
+                    temp = probability[inner_tag, t-1] + trans_dict[inner_tag][tag]
                     #print ("%s %s %d %s" % (inner_tag, tag, t, temp))
                     if temp > max_prob or max_prob == -999999:
                         max_prob = temp
