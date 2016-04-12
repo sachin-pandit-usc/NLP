@@ -58,25 +58,25 @@ def read_model_file (fd):
             tag = keys[1].strip()
             value = int(words[2].strip())
             if tag in end_tag_dict:
-                emission_dict[word][tag] = value/end_tag_dict[tag]
+                emission_dict[word][tag] = math.log(value/end_tag_dict[tag])
         elif "2" == flag:
             fill_dictionary (tag_dict, words)
             fill_dictionary (end_tag_dict, words)
         elif "3" == flag:
             key = words[1].strip()
             value = int(words[2].strip())
-            if key in end_tag_dict:
-                end_tag_dict[key] += value
+            if key in tag_dict:
+                tag_dict[key] -= value
             else:
-                end_tag_dict[key] = value
+                tag_dict[key] = value
         elif "4" == flag:
             key1 = words[1].strip()
             key2 = words[2].strip()
             value = int(words[3].strip())
             if key1 in tag_dict:
-                trans_dict[key1][key2] = value/tag_dict[key1]
+                trans_dict[key1][key2] = math.log(value/tag_dict[key1])
             if key1 == "start_state_q0":
-                trans_dict[key1][key2] = value/line_count
+                trans_dict[key1][key2] = math.log(value/line_count)
         elif "5" == flag:
             line_count = int(words[1].strip())
 
@@ -86,9 +86,9 @@ def transition_prob (inner_tag, tag):
         if tag in trans_dict[inner_tag]:
             res = trans_dict[inner_tag][tag]
         else:
-            return (0.00001)/line_count
+            return math.log((0.01)/line_count)
     else:
-        return (0.00001)/line_count
+        return math.log((0.01)/line_count)
 
     return res
 
@@ -98,9 +98,9 @@ def emission_prob (tag, word):
         if tag in emission_dict[word]:
             res = emission_dict [word][tag]
         else:
-            return (0.00001)/line_count
+            return math.log((0.00001)/line_count)
     else:
-        return (0.00001)/line_count
+        return math.log((0.00001)/line_count)
 
     return res
 
@@ -111,22 +111,34 @@ def assign_tag (fdw, words):
 
     word = words[0].strip()
     for tag in end_tag_dict:
-        probability[tag, 0] = transition_prob ("start_state_q0", tag) * emission_prob (tag, word)
+        probability[tag, 0] = transition_prob ("start_state_q0", tag) + emission_prob (tag, word)
         backpointer[tag, 0] = "start_state_q0"
+
 
     for t in range (1, len(words)):
         word = words[t].strip()
-        for tag in end_tag_dict:
-            max_prob = -999999
-            max_tag = ""
-            for inner_tag in end_tag_dict:
-                temp = probability [inner_tag, t-1] * transition_prob (inner_tag, tag) * emission_prob (tag, word)
-                if temp > max_prob:
-                    max_prob = temp
-                    max_tag = inner_tag
-            probability[tag, t] = max_prob
-            backpointer[tag, t] = max_tag
+        if word in emission_dict:
+            for tag in end_tag_dict:
+                if tag in emission_dict[word]:
+                    max_prob = -999999
+                    max_tag = ""
+                    for inner_tag in end_tag_dict:
+                        temp = probability [inner_tag, t-1] + transition_prob (inner_tag, tag) + emission_dict[word][tag]
+                        #print ("%s %s %d %s" % (inner_tag, tag, t, temp))
+                        if temp > max_prob or max_prob == -999999:
+                            max_prob = temp
+                            max_tag = inner_tag
+                    #print ("Max: %s %d %s" % (max_tag, t, max_prob))
+                    probability[tag, t] = max_prob
+                    backpointer[tag, t] = max_tag
+                else:
+                    probability[tag, t] = math.log((0.00001)/line_count)
+                    backpointer[tag, t] = tag
 
+        else:
+            for tag in end_tag_dict:
+                probability[tag, t] = math.log((0.00001)/line_count)
+                backpointer[tag, t] = tag
 
     max_prob = -999999
     max_tag = ""
@@ -167,9 +179,9 @@ def process_model_file (filename):
 def process_raw_file (filename):
     try:
         fd1 = open (filename, "r")
-        read_raw_file(fd1)
     except:
         print ("Can't open the file for reading")
+    read_raw_file(fd1)
 
 
 def syntax_check():
