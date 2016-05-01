@@ -13,20 +13,26 @@ candidate_count = defaultdict()
 reference_count = defaultdict()
 candidate_clipped = defaultdict()
 
-def clip_the_words():
-    global candidate_clipped
-    global reference_clipped
-
-    candidate_clipped[0] = defaultdict()
-    for candid_key in candidate_count[0]:
+def clip_each_ngrams(candidate_clipped, ngrams_index):
+    candidate_clipped[ngrams_index] = defaultdict()
+    for candid_key in candidate_count[0][ngrams_index]:
         max_list = []
         for ref_key in reference_count:
-            if candid_key in reference_count[ref_key]:
-                max_list.append(reference_count[ref_key][candid_key])
+            if candid_key in reference_count[ref_key][ngrams_index]:
+                max_list.append(reference_count[ref_key][ngrams_index][candid_key])
 
         if max_list:
             max_ref_count = max(max_list)
-            candidate_clipped[0][candid_key] = min(candidate_count[0][candid_key], max_ref_count)
+            candidate_clipped[ngrams_index][candid_key] = min(candidate_count[0][ngrams_index][candid_key],
+                                                              max_ref_count)
+
+
+def clip_the_words():
+    global candidate_clipped
+
+    candidate_clipped = defaultdict()
+    for ngrams_index in range(1, 5):
+        clip_each_ngrams(candidate_clipped, ngrams_index)
 
 
 def find_ngrams(input_list, n):
@@ -42,16 +48,18 @@ def debug_print():
 def store_ngrams (dictionary, line_string, fileindex):
     line_list = []
     line_list = line_string.split()
-    ngrams_list = find_ngrams(line_list, 1)
-    for tuple in ngrams_list:
-        ngrams_string = ""
-        for word in tuple:
-            ngrams_string += word + " "
-        ngrams_string = ngrams_string.strip()
-        if ngrams_string in dictionary[fileindex]:
-            dictionary[fileindex][ngrams_string] += 1
-        else:
-            dictionary[fileindex][ngrams_string] = 1
+    for ngrams_index in range(1, 5):
+        dictionary[fileindex][ngrams_index] = defaultdict()
+        ngrams_list = find_ngrams(line_list, ngrams_index)
+        for tuple in ngrams_list:
+            ngrams_string = ""
+            for word in tuple:
+                ngrams_string += word + " "
+            ngrams_string = ngrams_string.strip()
+            if ngrams_string in dictionary[fileindex][ngrams_index]:
+                dictionary[fileindex][ngrams_index][ngrams_string] += 1
+            else:
+                dictionary[fileindex][ngrams_index][ngrams_string] = 1
 
 
 def read_candidate_file (filename):
@@ -70,25 +78,32 @@ def read_candidate_file (filename):
             index += 1
     fd.close()
 
+
+def read_reference_file (filename, filecount):
+    with open(filename, "r") as fd:
+        index = 0
+        for line in fd:
+            temp_line = str(line).strip().lower()
+            for c in string.punctuation:
+                temp_line = temp_line.replace(c, "")
+            reference_input[index] = temp_line
+            store_ngrams(reference_count, temp_line, filecount)
+            index += 1
+    fd.close()
+
 def read_reference_directory (directory):
     global reference_input
     global reference_count
 
     filecount = 0
-    for file in os.listdir(directory):
-        reference_count[filecount] = defaultdict()
-        filename = directory + "/" + file
-        with open(filename, "r") as fd:
-            index = 0
-            for line in fd:
-                temp_line = str(line).strip().lower()
-                for c in string.punctuation:
-                    temp_line = temp_line.replace(c, "")
-                reference_input[index] = temp_line
-                store_ngrams (reference_count, temp_line, filecount)
-                index += 1
-        filecount += 1
-        fd.close()
+    if os.path.isdir(directory):
+        for file in os.listdir(directory):
+            reference_count[filecount] = defaultdict()
+            filename = directory + "/" + file
+            read_reference_file(filename, filecount)
+            filecount += 1
+    elif os.path.isfile(directory):
+        read_reference_file(directory, filecount)
 
 def check_syntax (length):
     if length != 3:
