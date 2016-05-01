@@ -6,12 +6,33 @@ from collections import defaultdict
 import glob, os
 import string
 
+#TODO : Handle encoding
 
 candidate_input = defaultdict()
 reference_input = defaultdict()
 candidate_count = defaultdict()
 reference_count = defaultdict()
 candidate_clipped = defaultdict()
+bp = 0
+
+def brevity_penalty():
+    r = 0
+    c = 0
+    for cand_key in candidate_input:
+        close_temp = 0
+        r_value = 0
+        cand_list = str(candidate_input[cand_key]).split()
+        c += len(cand_list)
+        for ref_index in reference_input:
+            ref_list = str(reference_input[ref_index][cand_key]).split()
+            temp_abs = abs(len(cand_list) - len(ref_list))
+            if temp_abs < close_temp or ref_index == 0:
+                close_temp = temp_abs
+                r_value = len(ref_list)
+        r += r_value
+
+    print "Brevity Penalty =", float(r/c)
+
 
 def clip_each_ngrams(candidate_clipped, ngrams_index):
     candidate_clipped[ngrams_index] = defaultdict()
@@ -23,8 +44,9 @@ def clip_each_ngrams(candidate_clipped, ngrams_index):
 
         if max_list:
             max_ref_count = max(max_list)
-            candidate_clipped[ngrams_index][candid_key] = min(candidate_count[0][ngrams_index][candid_key],
-                                                              max_ref_count)
+            temp = min(candidate_count[0][ngrams_index][candid_key],
+                       max_ref_count)
+            candidate_clipped[ngrams_index][candid_key] = temp
 
 
 def clip_the_words():
@@ -81,12 +103,13 @@ def read_candidate_file (filename):
 
 def read_reference_file (filename, filecount):
     with open(filename, "r") as fd:
+        reference_input[filecount] = defaultdict()
         index = 0
         for line in fd:
             temp_line = str(line).strip().lower()
             for c in string.punctuation:
                 temp_line = temp_line.replace(c, "")
-            reference_input[index] = temp_line
+            reference_input[filecount][index] = temp_line
             store_ngrams(reference_count, temp_line, filecount)
             index += 1
     fd.close()
@@ -114,4 +137,5 @@ if __name__ == "__main__":
     read_candidate_file (sys.argv[1])
     read_reference_directory (sys.argv[2])
     clip_the_words()
+    brevity_penalty()
     debug_print()
