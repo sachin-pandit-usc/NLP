@@ -5,6 +5,7 @@ import codecs
 from collections import defaultdict
 import glob, os
 import string
+import math
 
 #TODO : Handle encoding
 
@@ -13,9 +14,31 @@ reference_input = defaultdict()
 candidate_count = defaultdict()
 reference_count = defaultdict()
 candidate_clipped = defaultdict()
-bp = 0
+bp = 0.0
+wn_pn = 0.0
+bleu = 0.0
+
+def calculate_bleu():
+    bleu = pow(bp, wn_pn)
+    print "Final bleu value =", bleu
+
+def calculate_pn():
+    global wn_pn
+
+    for ngrams_index in range(1, 5):
+        pn = 0.0
+        for line_index in candidate_count[0]:
+            num = candidate_clipped[line_index][ngrams_index]["wordcount_clip_ngrams"]
+            den = candidate_count[0][line_index][ngrams_index]["wordcount_cand_ngrams"]
+            if num == 0 or den == 0:
+                pn = 0
+            else:
+                pn = float(num)/den
+        wn_pn += float(pn)/4.0
 
 def brevity_penalty():
+    global bp
+
     r = 0
     c = 0
     for cand_key in candidate_input:
@@ -31,30 +54,48 @@ def brevity_penalty():
                 r_value = len(ref_list)
         r += r_value
 
-    print "Brevity Penalty =", float(r/c)
+    if c > r:
+        bp = 1
+        print "Brevity Penalty = ", bp
+    else:
+        power_part = 1 - float(r)/float(c)
+        bp = math.exp(power_part)
+        print "Brevity Penalty =", bp
 
 
-def clip_each_ngrams(candidate_clipped, ngrams_index):
-    candidate_clipped[ngrams_index] = defaultdict()
-    for candid_key in candidate_count[0][ngrams_index]:
+def clip_each_ngrams(candidate_clipped, line_index, ngrams_index):
+    global  candidate_count
+
+    cand_wordcount = 0
+    clip_wordcount = 0
+
+    for candid_key in candidate_count[0][line_index][ngrams_index]:
         max_list = []
+        cand_wordcount += candidate_count[0][line_index][ngrams_index][candid_key]
         for ref_key in reference_count:
-            if candid_key in reference_count[ref_key][ngrams_index]:
-                max_list.append(reference_count[ref_key][ngrams_index][candid_key])
+            if candid_key in reference_count[ref_key][line_index][ngrams_index]:
+                max_list.append(reference_count[ref_key][line_index][ngrams_index][candid_key])
 
         if max_list:
             max_ref_count = max(max_list)
-            temp = min(candidate_count[0][ngrams_index][candid_key],
+            temp = min(candidate_count[0][line_index][ngrams_index][candid_key],
                        max_ref_count)
-            candidate_clipped[ngrams_index][candid_key] = temp
+            candidate_clipped[line_index][ngrams_index][candid_key] = temp
+            clip_wordcount += temp
+
+    candidate_count[0][line_index][ngrams_index]["wordcount_cand_ngrams"] = cand_wordcount
+    candidate_clipped[line_index][ngrams_index]["wordcount_clip_ngrams"] = clip_wordcount
 
 
 def clip_the_words():
     global candidate_clipped
 
     candidate_clipped = defaultdict()
-    for ngrams_index in range(1, 5):
-        clip_each_ngrams(candidate_clipped, ngrams_index)
+    for line_index in candidate_count[0]:
+        candidate_clipped[line_index] = defaultdict()
+        for ngrams_index in range(1, 5):
+            candidate_clipped[line_index][ngrams_index] = defaultdict()
+            clip_each_ngrams(candidate_clipped, line_index, ngrams_index)
 
 
 def find_ngrams(input_list, n):
@@ -67,21 +108,22 @@ def debug_print():
     print reference_count
 
 
-def store_ngrams (dictionary, line_string, fileindex):
+def store_ngrams (dictionary, line_string, fileindex, lineindex):
     line_list = []
+    dictionary[fileindex][lineindex] = defaultdict()
     line_list = line_string.split()
     for ngrams_index in range(1, 5):
-        dictionary[fileindex][ngrams_index] = defaultdict()
+        dictionary[fileindex][lineindex][ngrams_index] = defaultdict()
         ngrams_list = find_ngrams(line_list, ngrams_index)
         for tuple in ngrams_list:
             ngrams_string = ""
             for word in tuple:
                 ngrams_string += word + " "
             ngrams_string = ngrams_string.strip()
-            if ngrams_string in dictionary[fileindex][ngrams_index]:
-                dictionary[fileindex][ngrams_index][ngrams_string] += 1
+            if ngrams_string in dictionary[fileindex][lineindex][ngrams_index]:
+                dictionary[fileindex][lineindex][ngrams_index][ngrams_string] += 1
             else:
-                dictionary[fileindex][ngrams_index][ngrams_string] = 1
+                dictionary[fileindex][lineindex][ngrams_index][ngrams_string] = 1
 
 
 def read_candidate_file (filename):
@@ -96,7 +138,7 @@ def read_candidate_file (filename):
             for c in string.punctuation:
                 temp_line = temp_line.replace(c, "")
             candidate_input[index] = temp_line
-            store_ngrams (candidate_count, temp_line, 0)
+            store_ngrams (candidate_count, temp_line, 0, index)
             index += 1
     fd.close()
 
@@ -110,7 +152,7 @@ def read_reference_file (filename, filecount):
             for c in string.punctuation:
                 temp_line = temp_line.replace(c, "")
             reference_input[filecount][index] = temp_line
-            store_ngrams(reference_count, temp_line, filecount)
+            store_ngrams(reference_count, temp_line, filecount, index)
             index += 1
     fd.close()
 
@@ -138,4 +180,7 @@ if __name__ == "__main__":
     read_reference_directory (sys.argv[2])
     clip_the_words()
     brevity_penalty()
+    debug_print()
+    calculate_pn()
+    calculate_bleu()
     debug_print()
