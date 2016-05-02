@@ -8,6 +8,7 @@ import string
 import math
 
 #TODO : Handle encoding
+#TODO : Remove punctuation
 
 candidate_input = defaultdict()
 reference_input = defaultdict()
@@ -17,9 +18,11 @@ candidate_clipped = defaultdict()
 bp = 0.0
 wn_pn = 0.0
 bleu = 0.0
+c = 0.0
+r = 0.0
 
 def calculate_bleu():
-    bleu = pow(bp, wn_pn)
+    bleu = math.exp(min((1 - float(r)/c), 0) + wn_pn)
     #print "Final bleu value =", bleu
     fdw = open("bleu_out.txt", "w")
     fdw.write(str(bleu))
@@ -43,6 +46,8 @@ def calculate_pn():
 
 def brevity_penalty():
     global bp
+    global c
+    global r
 
     r = 0
     c = 0
@@ -59,13 +64,6 @@ def brevity_penalty():
                 r_value = len(ref_list)
         r += r_value
 
-    if c > r:
-        bp = 1
-        #print "Brevity Penalty = ", bp
-    else:
-        power_part = 1 - float(r)/float(c)
-        bp = math.exp(power_part)
-        #print "Brevity Penalty =", bp
 
 
 def clip_each_ngrams(candidate_clipped, line_index, ngrams_index):
