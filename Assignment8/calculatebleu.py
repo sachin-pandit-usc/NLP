@@ -39,7 +39,7 @@ def calculate_pn():
             pn = 0
         else:
             pn = float(num)/den
-        wn_pn += float(pn)/4.0
+        wn_pn += float(math.log(pn))/4.0
 
 def brevity_penalty():
     global bp
