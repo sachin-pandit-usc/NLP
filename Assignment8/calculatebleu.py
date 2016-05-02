@@ -20,20 +20,25 @@ bleu = 0.0
 
 def calculate_bleu():
     bleu = pow(bp, wn_pn)
-    print "Final bleu value =", bleu
+    #print "Final bleu value =", bleu
+    fdw = open("bleu_out.txt", "w")
+    fdw.write(str(bleu))
+    fdw.close()
 
 def calculate_pn():
     global wn_pn
 
     for ngrams_index in range(1, 5):
         pn = 0.0
+        num = 0
+        den = 0
         for line_index in candidate_count[0]:
-            num = candidate_clipped[line_index][ngrams_index]["wordcount_clip_ngrams"]
-            den = candidate_count[0][line_index][ngrams_index]["wordcount_cand_ngrams"]
-            if num == 0 or den == 0:
-                pn = 0
-            else:
-                pn = float(num)/den
+            num += candidate_clipped[line_index][ngrams_index]["wordcount_clip_ngrams"]
+            den += candidate_count[0][line_index][ngrams_index]["wordcount_cand_ngrams"]
+        if num == 0 or den == 0:
+            pn = 0
+        else:
+            pn = float(num)/den
         wn_pn += float(pn)/4.0
 
 def brevity_penalty():
@@ -56,11 +61,11 @@ def brevity_penalty():
 
     if c > r:
         bp = 1
-        print "Brevity Penalty = ", bp
+        #print "Brevity Penalty = ", bp
     else:
         power_part = 1 - float(r)/float(c)
         bp = math.exp(power_part)
-        print "Brevity Penalty =", bp
+        #print "Brevity Penalty =", bp
 
 
 def clip_each_ngrams(candidate_clipped, line_index, ngrams_index):
@@ -71,6 +76,7 @@ def clip_each_ngrams(candidate_clipped, line_index, ngrams_index):
 
     for candid_key in candidate_count[0][line_index][ngrams_index]:
         max_list = []
+        #print line_index, ngrams_index, candid_key #TODO Need to check if one of the reference file length is not matched with the candidate!!
         cand_wordcount += candidate_count[0][line_index][ngrams_index][candid_key]
         for ref_key in reference_count:
             if candid_key in reference_count[ref_key][line_index][ngrams_index]:
@@ -135,8 +141,10 @@ def read_candidate_file (filename):
         index = 0
         for line in fd:
             temp_line = str(line).strip().lower()
+            '''
             for c in string.punctuation:
                 temp_line = temp_line.replace(c, "")
+            '''
             candidate_input[index] = temp_line
             store_ngrams (candidate_count, temp_line, 0, index)
             index += 1
@@ -149,8 +157,10 @@ def read_reference_file (filename, filecount):
         index = 0
         for line in fd:
             temp_line = str(line).strip().lower()
+            '''
             for c in string.punctuation:
                 temp_line = temp_line.replace(c, "")
+            '''
             reference_input[filecount][index] = temp_line
             store_ngrams(reference_count, temp_line, filecount, index)
             index += 1
@@ -168,6 +178,7 @@ def read_reference_directory (directory):
             read_reference_file(filename, filecount)
             filecount += 1
     elif os.path.isfile(directory):
+        reference_count[filecount] = defaultdict()
         read_reference_file(directory, filecount)
 
 def check_syntax (length):
@@ -180,7 +191,7 @@ if __name__ == "__main__":
     read_reference_directory (sys.argv[2])
     clip_the_words()
     brevity_penalty()
-    debug_print()
+    #debug_print()
     calculate_pn()
     calculate_bleu()
-    debug_print()
+    #debug_print()
